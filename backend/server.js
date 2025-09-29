@@ -1,25 +1,16 @@
-const express = require("express");
-const mongoose = require("mongoose");
-const cors = require("cors");
-const dotenv = require("dotenv");
+// backend/models/User.js
+const { DataTypes } = require("sequelize");
+const sequelize = require("../config/db");
 
-dotenv.config();
-const app = express();
+const User = sequelize.define("User", {
+  id: { type: DataTypes.INTEGER, autoIncrement: true, primaryKey: true },
+  name: { type: DataTypes.STRING, allowNull: false },
+  email: { type: DataTypes.STRING, allowNull: false, unique: true },
+  password: { type: DataTypes.STRING, allowNull: false },
+  role: { type: DataTypes.ENUM("student", "teacher"), defaultValue: "student" }
+});
 
-app.use(cors({ origin: process.env.CLIENT_URL || "*" }));
-app.use(express.json());
-
-// Connect to MongoDB
-mongoose
-  .connect(process.env.MONGO_URI, {
-    useNewUrlParser: true,
-    useUnifiedTopology: true,
-  })
-  .then(() => console.log("MongoDB connected"))
-  .catch((err) => {
-    console.error("MongoDB connection error:", err.message);
-    process.exit(1);
-  });
+module.exports = User;
 
 // Routes
 const authRoutes = require("./routes/auth");
