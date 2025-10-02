@@ -1,23 +1,41 @@
-import React, { useEffect, useState } from 'react';
-import API from '../api';
+import React, { useEffect, useState } from "react";
+import API from "../api";
 
-export default function MyResults(){
+export default function MyResults() {
   const [results, setResults] = useState([]);
-  useEffect(()=>{
-    API.get('/results/me').then(r => setResults(r.data)).catch(()=>{});
-  },[]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    API.get("/results")
+      .then((res) => {
+        setResults(res.data);
+        setLoading(false);
+      })
+      .catch(() => setLoading(false));
+  }, []);
+
+  if (loading) return <p>Loading results...</p>;
+  if (!results.length) return <p>No results yet.</p>;
+
   return (
     <div>
       <h2>My Results</h2>
-      {results.length === 0 && <div>No results yet.</div>}
-      {results.map(r => (
-        <div key={r._id} style={{border:'1px solid #eee', padding:10, marginBottom:8}}>
-          <div><strong>Course:</strong> {r.course?.title || 'Unknown'}</div>
-          <div><strong>Quiz:</strong> {r.quiz?.title || 'Unknown'}</div>
-          <div><strong>Score:</strong> {r.score} / {r.total}</div>
-          <div><small>Taken: {new Date(r.takenAt).toLocaleString()}</small></div>
-        </div>
-      ))}
+      <table border="1" cellPadding={8}>
+        <thead>
+          <tr>
+            <th>Quiz ID</th>
+            <th>Score</th>
+          </tr>
+        </thead>
+        <tbody>
+          {results.map((r) => (
+            <tr key={r.id}>
+              <td>{r.quizId}</td>
+              <td>{r.score}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
     </div>
   );
 }

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import API from '../api';
+import API from '../api';   // ✅ fixed path
 import { useNavigate } from 'react-router-dom';
 
 export default function Register(){
@@ -17,7 +17,7 @@ export default function Register(){
       localStorage.setItem('user', JSON.stringify(res.data.user));
       nav('/dashboard');
     } catch (err) {
-      alert(err.response?.data?.msg || 'Register failed');
+      alert(err.response?.data?.error || 'Register failed');
     }
   };
 

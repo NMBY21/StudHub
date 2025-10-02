@@ -1,59 +1,75 @@
-import React, { useEffect, useState } from 'react';
-import API from '../api';
-import { useParams, useNavigate } from 'react-router-dom';
+import React, { useEffect, useState } from "react";
+import { useParams, useNavigate } from "react-router-dom";
+import API from "../api";
 
-export default function QuizPage(){
-  const { id } = useParams();
-  const [quiz, setQuiz] = useState(null);
+export default function QuizPage() {
+  const { id } = useParams(); // quiz ID or course ID
+  const [quizzes, setQuizzes] = useState([]);
   const [answers, setAnswers] = useState({});
-  const nav = useNavigate();
+  const [loading, setLoading] = useState(true);
+  const navigate = useNavigate();
 
-  useEffect(()=> {
-    API.get(`/quizzes/${id}`).then(r => setQuiz(r.data)).catch(()=>{});
-  },[id]);
+  useEffect(() => {
+    // Fetch all quizzes for the course
+    API.get(`/quizzes/${id}`)
+      .then((res) => {
+        setQuizzes(res.data);
+        setLoading(false);
+      })
+      .catch(() => setLoading(false));
+  }, [id]);
 
-  if (!quiz) return <div>Loading...</div>;
-
-  const setAnswer = (qIndex, optionIndex) => {
-    setAnswers(prev => ({ ...prev, [qIndex]: optionIndex }));
+  const handleChange = (quizId, value) => {
+    setAnswers({ ...answers, [quizId]: value });
   };
 
-  const submit = async () => {
-    let score = 0;
-    quiz.questions.forEach((q, i) => {
-      if (answers[i] === q.correctIndex) score++;
-    });
-    const total = quiz.questions.length;
+  const handleSubmit = async (e) => {
+    e.preventDefault();
     try {
-      await API.post('/results', { course: quiz.course, quiz: quiz._id, score, total });
-      alert(`You scored ${score} out of ${total}`);
-      nav('/dashboard');
+      let totalScore = 0;
+      quizzes.forEach((q) => {
+        if (answers[q.id] === q.answer) totalScore += 1;
+      });
+
+      // Save result in backend
+      await API.post("/results", { quizId: quizzes[0]?.id, score: totalScore });
+
+      alert(`Quiz submitted! Your score: ${totalScore}/${quizzes.length}`);
+      navigate("/myresults");
     } catch (err) {
-      alert('Error saving result; please ensure you are logged in.');
+      alert("Failed to submit results");
     }
   };
 
+  if (loading) return <p>Loading quiz...</p>;
+  if (!quizzes.length) return <p>No quizzes found for this course.</p>;
+
   return (
     <div>
-      <h2>{quiz.title}</h2>
-      {quiz.questions.map((q, i) => (
-        <div key={i} style={{marginBottom:16}}>
-          <p><strong>{i + 1}.</strong> {q.question}</p>
-          {q.options.map((opt, idx) => (
-            <div key={idx}>
-              <label>
+      <h2>Quiz</h2>
+      <form onSubmit={handleSubmit}>
+        {quizzes.map((q, idx) => (
+          <div key={q.id} style={{ marginBottom: 20 }}>
+            <p>
+              {idx + 1}. {q.question}
+            </p>
+            {q.options.map((opt, i) => (
+              <label key={i} style={{ display: "block" }}>
                 <input
                   type="radio"
-                  name={`q-${i}`}
-                  checked={answers[i] === idx}
-                  onChange={() => setAnswer(i, idx)}
-                /> {opt}
+                  name={`quiz-${q.id}`}
+                  value={opt}
+                  checked={answers[q.id] === opt}
+                  onChange={() => handleChange(q.id, opt)}
+                  required
+                />{" "}
+                {opt}
               </label>
-            </div>
-          ))}
-        </div>
-      ))}
-      <button onClick={submit}>Submit Quiz</button>
+            ))}
+          </div>
+        ))}
+        <button type="submit">Submit Quiz</button>
+      </form>
     </div>
   );
 }
