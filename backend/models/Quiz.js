@@ -1,16 +1,17 @@
-const mongoose = require('mongoose');
+// backend/models/Quiz.js
+const { DataTypes } = require("sequelize");
+const sequelize = require("../config/db");
+const Course = require("./Course");
 
-const QuestionSchema = new mongoose.Schema({
-  question: { type: String, required: true },
-  options: [{ type: String }],
-  correctIndex: { type: Number, required: true }
+const Quiz = sequelize.define("Quiz", {
+  id: { type: DataTypes.INTEGER, autoIncrement: true, primaryKey: true },
+  question: { type: DataTypes.STRING, allowNull: false },
+  options: { type: DataTypes.JSON, allowNull: false }, // array of choices
+  answer: { type: DataTypes.STRING, allowNull: false } // correct choice
 });
 
-const QuizSchema = new mongoose.Schema({
-  course: { type: mongoose.Schema.Types.ObjectId, ref: 'Course' },
-  title: { type: String, required: true },
-  questions: [QuestionSchema],
-  createdAt: { type: Date, default: Date.now }
-});
+// Each quiz belongs to a course
+Quiz.belongsTo(Course, { foreignKey: "courseId", as: "course" });
+Course.hasMany(Quiz, { foreignKey: "courseId", as: "quizzes" });
 
-module.exports = mongoose.model('Quiz', QuizSchema);
+module.exports = Quiz;

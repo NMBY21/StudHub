@@ -1,18 +1,16 @@
-const mongoose = require('mongoose');
+// backend/models/Course.js
+const { DataTypes } = require("sequelize");
+const sequelize = require("../config/db");
+const User = require("./User");
 
-const LessonSchema = new mongoose.Schema({
-  title: String,
-  content: String,
-  resources: [String] // optional URLs to PDFs/videos
+const Course = sequelize.define("Course", {
+  id: { type: DataTypes.INTEGER, autoIncrement: true, primaryKey: true },
+  title: { type: DataTypes.STRING, allowNull: false },
+  description: { type: DataTypes.TEXT, allowNull: false }
 });
 
-const CourseSchema = new mongoose.Schema({
-  title: { type: String, required: true, trim: true },
-  description: { type: String },
-  category: { type: String },
-  teacher: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
-  lessons: [LessonSchema],
-  createdAt: { type: Date, default: Date.now }
-});
+// Teacher owns courses
+Course.belongsTo(User, { foreignKey: "teacherId", as: "teacher" });
+User.hasMany(Course, { foreignKey: "teacherId", as: "courses" });
 
-module.exports = mongoose.model('Course', CourseSchema);
+module.exports = Course;

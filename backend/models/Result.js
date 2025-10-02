@@ -1,12 +1,19 @@
-const mongoose = require('mongoose');
+// backend/models/Result.js
+const { DataTypes } = require("sequelize");
+const sequelize = require("../config/db");
+const User = require("./User");
+const Quiz = require("./Quiz");
 
-const ResultSchema = new mongoose.Schema({
-  student: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
-  course: { type: mongoose.Schema.Types.ObjectId, ref: 'Course' },
-  quiz: { type: mongoose.Schema.Types.ObjectId, ref: 'Quiz' },
-  score: { type: Number },
-  total: { type: Number },
-  takenAt: { type: Date, default: Date.now }
+const Result = sequelize.define("Result", {
+  id: { type: DataTypes.INTEGER, autoIncrement: true, primaryKey: true },
+  score: { type: DataTypes.INTEGER, allowNull: false }
 });
 
-module.exports = mongoose.model('Result', ResultSchema);
+// Link to student + quiz
+Result.belongsTo(User, { foreignKey: "studentId", as: "student" });
+Result.belongsTo(Quiz, { foreignKey: "quizId", as: "quiz" });
+
+User.hasMany(Result, { foreignKey: "studentId", as: "results" });
+Quiz.hasMany(Result, { foreignKey: "quizId", as: "results" });
+
+module.exports = Result;

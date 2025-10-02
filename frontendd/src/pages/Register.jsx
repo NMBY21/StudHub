@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import API from '../../../frontendd/src/api';
+import API from '../api';
 import { useNavigate } from 'react-router-dom';
 
 export default function Register(){
